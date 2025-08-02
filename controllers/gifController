@@ -1,0 +1,97 @@
+const { createCanvas, Image } = require('canvas'); // Import Image from canvas
+const GIFEncoder = require('gif-encoder-2');
+const { createWriteStream } = require('fs');
+const fs = require('fs')
+
+const path = require('path');
+
+const createGif = async (req, res) => {
+  try {
+    const title = req.body.title;
+    const files = req.files; // Uploaded image files
+
+    if (!title || !files || files.length === 0) {
+      return res.status(400).json({ error: 'Title and at least one image are required.' });
+    }
+
+    const imagePaths = files.map(file => file.path);
+    console.log(typeof(imagePaths));
+    console.log(imagePaths);
+
+    const outputFilename = `${title.replace(/\s+/g, '_')}_${Date.now()}.gif`;
+    const outputPath = path.join(__dirname, '..', 'temp', outputFilename);
+
+    await createGifFromImages(imagePaths, outputPath);
+
+    tempImageCleanup(imagePaths);
+
+    // You can now upload the gif at outputPath to S3 (or serve/send it back)
+
+    res.status(201).json({ message: 'GIF created successfully', path: outputPath });
+  } catch (error) {
+    console.error('Error creating GIF:', error);
+    res.status(500).json({ error: 'Failed to create GIF' });
+  }
+};
+
+async function createGifFromImages(imagePaths, outputPath, algorithm = 'neuquant') {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Sort the files to maintain sequence - Part of the documentation but could interfere with custom sorting.
+        //imagePaths.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  
+        if (imagePaths.length === 0) {
+          throw new Error('No image files found.');
+        }
+  
+        // Find the width and height of the first image
+        const [width, height] = await new Promise(resolveImage => {
+          const image = new Image();
+          image.onload = () => resolveImage([image.width, image.height]);
+          image.src = imagePaths[0];
+        });
+  
+        const writeStream = createWriteStream(outputPath);
+        writeStream.on('close', resolve);
+  
+        const encoder = new GIFEncoder(width, height, algorithm);
+        encoder.createReadStream().pipe(writeStream);
+        encoder.start();
+        encoder.setDelay(500); // Set frame delay
+  
+        const canvas = createCanvas(width, height);
+        const ctx = canvas.getContext('2d');
+  
+        // Draw an image for each file and add frame to encoder
+        for (const imagePath of imagePaths) {
+          await new Promise(resolveFrame => {
+            const image = new Image();
+            image.onload = () => {
+              ctx.drawImage(image, 0, 0);
+              encoder.addFrame(ctx);
+              resolveFrame();
+            };
+            image.src = imagePath;
+          });
+        }
+  
+        encoder.finish();
+      } catch (error) {
+        reject(error);
+      }
+    });
+}
+
+async function tempImageCleanup(imagePathsToClean) {
+  for (const path of imagePathsToClean) {
+    try {
+      await fs.unlink(path);
+    } catch (err) {
+      console.error(`Failed to delete ${path}:`, err);
+    }
+  }
+}
+
+module.exports = {
+  createGif
+};

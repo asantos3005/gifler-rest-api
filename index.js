@@ -1,16 +1,17 @@
 const express = require('express')
-const app = express()
-const homeRoutes = require('./routes/movies'); 
+const cors = require('cors');
 
+const gifRoutes = require('./routes/gifRoutes')
+const app = express()
 const port = 3000
 
+app.use(cors())
 
-// An example of router
-app.use('/', homeRoutes); 
+
+// Router
 app.use('/gif', gifRoutes); 
-app.use('/collection', collectionRoutes); 
-app.use('/auth', authRoutes); 
-
+//app.use('/collection', collectionRoutes); 
+//app.use('/auth', authRoutes); 
 
 
 app.listen(port, () => {

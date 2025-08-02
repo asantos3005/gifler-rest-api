@@ -9,6 +9,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "canvas": "^3.1.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "gif-encoder-2": "^1.0.5",
+    "multer": "^2.0.2"
   }
 }
