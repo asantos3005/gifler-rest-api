@@ -1,7 +1,8 @@
 const { createCanvas, Image } = require('canvas'); // Import Image from canvas
 const GIFEncoder = require('gif-encoder-2');
 const { createWriteStream } = require('fs');
-const fs = require('fs')
+const fs = require('fs').promises;
+
 
 const path = require('path');
 
@@ -23,7 +24,7 @@ const createGif = async (req, res) => {
 
     await createGifFromImages(imagePaths, outputPath);
 
-    tempImageCleanup(imagePaths);
+    await tempImageCleanup(imagePaths);
 
     // You can now upload the gif at outputPath to S3 (or serve/send it back)
 
@@ -83,12 +84,11 @@ async function createGifFromImages(imagePaths, outputPath, algorithm = 'neuquant
 }
 
 async function tempImageCleanup(imagePathsToClean) {
-  for (const path of imagePathsToClean) {
-    try {
-      await fs.unlink(path);
-    } catch (err) {
-      console.error(`Failed to delete ${path}:`, err);
-    }
+  try {
+    await Promise.all(imagePathsToClean.map(p => fs.unlink(p)));
+    console.log('Temp files deleted.');
+  } catch (err) {
+    console.error('Failed to delete temp files:', err);
   }
 }
 
