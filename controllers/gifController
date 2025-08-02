@@ -1,7 +1,12 @@
 const { createCanvas, Image } = require('canvas'); // Import Image from canvas
 const GIFEncoder = require('gif-encoder-2');
 const { createWriteStream } = require('fs');
+const { uploadToS3 } = require('../utils/s3Util');
 const fs = require('fs').promises;
+require('dotenv').config();
+
+
+const bucketName = 'drew'
 
 
 const path = require('path');
@@ -25,6 +30,8 @@ const createGif = async (req, res) => {
     await createGifFromImages(imagePaths, outputPath);
 
     await tempImageCleanup(imagePaths);
+
+    await uploadToS3(outputPath, process.env.S3_BUCKET_NAME, `gifs/${path.basename(outputPath)}`);
 
     // You can now upload the gif at outputPath to S3 (or serve/send it back)
 
