@@ -33,7 +33,8 @@ const createGif = async (req, res) => {
 
     await uploadToS3(outputPath, process.env.S3_BUCKET_NAME, `gifs/${path.basename(outputPath)}`);
 
-    // You can now upload the gif at outputPath to S3 (or serve/send it back)
+    await tempGifCleanup(outputPath);
+
 
     res.status(201).json({ message: 'GIF created successfully', path: outputPath });
   } catch (error) {
@@ -96,6 +97,14 @@ async function tempImageCleanup(imagePathsToClean) {
     console.log('Temp files deleted.');
   } catch (err) {
     console.error('Failed to delete temp files:', err);
+  }
+}
+
+async function tempGifCleanup(gifPathToClean) {
+  try {
+    fs.unlink(gifPathToClean)
+  } catch (e) {
+    
   }
 }
 
