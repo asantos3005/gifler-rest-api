@@ -16,6 +16,7 @@ const pool = new Pool({
   },
 });
 
+/*
 async function getPgVersion() {
   const client = await pool.connect();
   try {
@@ -26,8 +27,11 @@ async function getPgVersion() {
   }
 }
 getPgVersion();
+*/
 
-const gifRoutes = require('./routes/gifRoutes')
+const gifRoutes = require('./routes/gifRoutes.js')
+const authRoutes = require('./routes/authRoutes.js')
+
 const app = express()
 const port = 3000
 
@@ -37,7 +41,7 @@ app.use(cors())
 // Router
 app.use('/gif', gifRoutes); 
 //app.use('/collection', collectionRoutes); 
-//app.use('/auth', authRoutes); 
+app.use('/auth', authRoutes); 
 
 
 app.listen(port, () => {

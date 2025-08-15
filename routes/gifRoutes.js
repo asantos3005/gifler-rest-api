@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const gifController = require('../controllers/gifController');
+const gifController = require('../controllers/gifController.js');
 const upload = require('../middleware/upload');
 
 // Handles POST /api/gifs
